@@ -1,0 +1,27 @@
+name: "Opdater naeste moede"
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install icalendar recurring_ical_events
+      - name: "Hent naeste moede"
+        run: python update_meeting.py
+        env:
+          ICS_URL: ${{ secrets.ICS_URL }}
+      - name: "Commit hvis aendret"
+        run: |
+          git config user.name "marble-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add next.json
+          git diff --staged --quiet || git commit -m "Opdater naeste moede"
+          git push
